@@ -6,11 +6,14 @@ import {
   TouchableOpacity,
   View,
   FlatList,
+  NativeModules,
 } from 'react-native';
 import uuid from 'uuid';
 import IOSDateTimePicker from './src/components/IOSDateTimePicker';
 import AsyncStorage from '@react-native-community/async-storage';
 import moment from 'moment';
+
+const {NotificationScheduler} = NativeModules;
 
 const LIST_STORAGE_KEY = 'LIST';
 
@@ -35,20 +38,24 @@ class App extends React.Component {
   createScheduledNotification = () => {
     const {message, datetime, data} = this.state;
     const id = uuid();
-    // TODO: Create notification
     data.push({id, message, datetime});
     this.setState({message: '', datetime: '', data}, () => {
       AsyncStorage.setItem(LIST_STORAGE_KEY, JSON.stringify(data));
     });
+
+    // Schedule the notification
+    NotificationScheduler.scheduleNotification(id, message, datetime.getTime());
   };
 
   deleteNotification = notificationId => {
     let {data} = this.state;
-    // TODO: Delete notification
     data = data.filter(item => item.id !== notificationId);
     this.setState({data}, () => {
       AsyncStorage.setItem(LIST_STORAGE_KEY, JSON.stringify(data));
     });
+
+    // Remove the notification
+    NotificationScheduler.removeNotification(notificationId);
   };
 
   onDateTimePress = () => this.setState({datePickerActive: true});
