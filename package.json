@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@react-native-community/async-storage": "^1.7.1",
+    "@react-native-community/datetimepicker": "^2.2.1",
+    "moment": "^2.24.0",
     "react": "16.9.0",
     "react-native": "0.61.5",
     "uuid": "^3.4.0"

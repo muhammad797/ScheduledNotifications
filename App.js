@@ -8,11 +8,14 @@ import {
   FlatList,
 } from 'react-native';
 import uuid from 'uuid';
+import IOSDateTimePicker from './src/components/IOSDateTimePicker';
+import moment from 'moment';
 
 class App extends React.Component {
   state = {
     message: '',
-    datetime: '',
+    datetime: null,
+    datePickerActive: false,
     data: [
       {message: 'Go to doctor', id: '1', datetime: 1581323191903},
       {message: 'Write a book', id: '2', datetime: 1581294495768},
@@ -35,6 +38,18 @@ class App extends React.Component {
     this.setState({data});
   };
 
+  onDateTimePress = () => this.setState({datePickerActive: true});
+
+  onDatePickerCancel = () => this.setState({datePickerActive: false});
+
+  onDatePickerDone = datetime => {
+    this.setState({datetime, datePickerActive: false});
+  };
+
+  getFormattedDate = (datetime, alt) => {
+    return datetime ? moment(datetime).format('MMMM Do YYYY, h:mm:ss a') : alt;
+  };
+
   render() {
     return (
       <SafeAreaView style={styles.container}>
@@ -47,18 +62,25 @@ class App extends React.Component {
               style={styles.field}
               placeholder={'Enter notification message'}
             />
-            <TextInput
-              value={this.state.datetime}
-              onChangeText={datetime => this.setState({datetime})}
+            <TouchableOpacity
               style={styles.field}
-              placeholder={'Enter Date & Time'}
-            />
+              onPress={this.onDateTimePress}>
+              <Text
+                style={{color: this.state.datetime ? '#000000' : '#555555'}}>
+                {this.getFormattedDate(
+                  this.state.datetime,
+                  'Select Date & Time',
+                )}
+              </Text>
+            </TouchableOpacity>
             <TouchableOpacity
               style={styles.button}
+              disabled={!this.state.datetime || this.state.message.length === 0}
               onPress={this.createScheduledNotification}>
               <Text style={styles.buttonText}>Create</Text>
             </TouchableOpacity>
           </View>
+
           <FlatList
             data={this.state.data}
             extraData={this.state}
@@ -67,7 +89,9 @@ class App extends React.Component {
               <View style={styles.item}>
                 <View>
                   <Text style={styles.itemText}>{item.message}</Text>
-                  <Text style={styles.datetimeText}>{item.datetime}</Text>
+                  <Text style={styles.datetimeText}>
+                    {this.getFormattedDate(item.datetime)}
+                  </Text>
                 </View>
                 <TouchableOpacity
                   onPress={() => this.deleteNotification(item.id)}>
@@ -77,6 +101,11 @@ class App extends React.Component {
             )}
           />
         </View>
+        <IOSDateTimePicker
+          visible={this.state.datePickerActive}
+          onCancel={this.onDatePickerCancel}
+          onDone={this.onDatePickerDone}
+        />
       </SafeAreaView>
     );
   }
@@ -141,5 +170,38 @@ const styles = {
   datetimeText: {
     fontSize: 12,
     color: '#555555',
+  },
+  datetimeModal: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    // backgroundColor: 'rgba(0, 0, 0, 0.02)',
+    justifyContent: 'flex-end',
+  },
+  datetimePicker: {
+    backgroundColor: '#FFFFFF',
+    paddingBottom: 15,
+  },
+  iosDatetimeOptions: {
+    padding: 10,
+    paddingHorizontal: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#CCCCCC',
+    backgroundColor: '#F5F5F5',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  iosBlueOptionText: {
+    color: 'rgb(14, 122, 254)',
+    fontWeight: '500',
+    fontSize: 16,
+  },
+  iosOptionText: {
+    color: 'rgb(135, 135, 139)',
+    fontWeight: '500',
+    fontSize: 16,
   },
 };
