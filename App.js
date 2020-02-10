@@ -9,33 +9,46 @@ import {
 } from 'react-native';
 import uuid from 'uuid';
 import IOSDateTimePicker from './src/components/IOSDateTimePicker';
+import AsyncStorage from '@react-native-community/async-storage';
 import moment from 'moment';
+
+const LIST_STORAGE_KEY = 'LIST';
 
 class App extends React.Component {
   state = {
     message: '',
     datetime: null,
     datePickerActive: false,
-    data: [
-      {message: 'Go to doctor', id: '1', datetime: 1581323191903},
-      {message: 'Write a book', id: '2', datetime: 1581294495768},
-      {message: 'Manage schedule', id: '3', datetime: 1581312513229},
-    ],
+    data: [],
   };
+
+  async componentDidMount() {
+    let data = await AsyncStorage.getItem(LIST_STORAGE_KEY);
+    if (data) {
+      data = JSON.parse(data);
+      this.setState({data});
+    } else {
+      AsyncStorage.setItem(LIST_STORAGE_KEY, '[]');
+    }
+  }
 
   createScheduledNotification = () => {
     const {message, datetime, data} = this.state;
     const id = uuid();
     // TODO: Create notification
-    data.push({message, datetime, id});
-    this.setState({message: '', datetime: '', data});
+    data.push({id, message, datetime});
+    this.setState({message: '', datetime: '', data}, () => {
+      AsyncStorage.setItem(LIST_STORAGE_KEY, JSON.stringify(data));
+    });
   };
 
   deleteNotification = notificationId => {
     let {data} = this.state;
     // TODO: Delete notification
     data = data.filter(item => item.id !== notificationId);
-    this.setState({data});
+    this.setState({data}, () => {
+      AsyncStorage.setItem(LIST_STORAGE_KEY, JSON.stringify(data));
+    });
   };
 
   onDateTimePress = () => this.setState({datePickerActive: true});
@@ -154,7 +167,6 @@ const styles = {
   item: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    // alignItems: 'center',
     padding: 10,
     backgroundColor: '#FAFAFA',
     borderRadius: 4,
@@ -177,7 +189,6 @@ const styles = {
     left: 0,
     right: 0,
     bottom: 0,
-    // backgroundColor: 'rgba(0, 0, 0, 0.02)',
     justifyContent: 'flex-end',
   },
   datetimePicker: {
